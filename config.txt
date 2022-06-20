@@ -1,0 +1,243 @@
+BREAK_ONLY_BEFORE = <regular expression>
+* When set, Splunk software creates a new event only if it encounters a new
+  line that matches the regular expression.
+* Default: empty string
+
+MUST_BREAK_AFTER = <regular expression>
+* When set, Splunk software creates a new event for the next input line only
+  if the regular expression matches the current line.
+* It is possible for the software to break before the current line if
+  another rule matches.
+* Default: empty string
+
+MUST_NOT_BREAK_AFTER = <regular expression>
+* When set, and the current line matches the regular expression, Splunk software
+  does not break on any subsequent lines until the MUST_BREAK_AFTER expression
+  matches.
+* Default: empty string
+
+MUST_NOT_BREAK_BEFORE = <regular expression>
+* When set, and the current line matches the regular expression, Splunk
+  software does not break the last event before the current line.
+* Default: empty string
+
+MAX_EVENTS = <integer>
+* The maximum number of input lines to add to any event.
+* Splunk software breaks after it reads the specified number of lines.
+* Default: 256
+
+TRUNCATE = <non-negative integer>
+* The default maximum line length, in bytes.
+* Although this is in bytes, line length is rounded down when this would
+  otherwise land mid-character for multi-byte characters.
+* Set to 0 if you never want truncation (very long lines are, however, often
+  a sign of garbage data).
+* Default: 10000
+
+LINE_BREAKER = <regular expression>
+* Specifies a regex that determines how the raw text stream is broken into
+  initial events, before line merging takes place. (See the SHOULD_LINEMERGE
+  setting, below.)
+* The regex must contain a capturing group -- a pair of parentheses which
+  defines an identified subcomponent of the match.
+* Wherever the regex matches, Splunk software considers the start of the first
+  capturing group to be the end of the previous event, and considers the end
+  of the first capturing group to be the start of the next event.
+* The contents of the first capturing group are discarded, and are not
+  present in any event. You are telling Splunk software that this text comes
+  between lines.
+* NOTE: You get a significant boost to processing speed when you use
+  LINE_BREAKER to delimit multi-line events (as opposed to using
+  SHOULD_LINEMERGE to reassemble individual lines into multi-line events).
+  * When using LINE_BREAKER to delimit events, SHOULD_LINEMERGE should be set
+    to false, to ensure no further combination of delimited events occurs.
+  * Using LINE_BREAKER to delimit events is discussed in more detail in the
+    documentation. Search the documentation for "configure event line breaking"
+    for details.
+* Default: ([\r\n]+) (Data is broken into an event for each line,
+  delimited by any number of carriage return or newline characters.)
+
+
+** Special considerations for LINE_BREAKER with branched expressions  **
+
+When using LINE_BREAKER with completely independent patterns separated by
+pipes, some special issues come into play.
+    EG. LINE_BREAKER = pattern1|pattern2|pattern3
+
+NOTE: This is not about all forms of alternation. For instance, there is
+nothing particularly special about
+    example: LINE_BREAKER = ([\r\n])+(one|two|three)
+where the top level remains a single expression.
+
+CAUTION: Relying on these rules is NOT encouraged.  Simpler is better, in
+both regular expressions and the complexity of the behavior they rely on.
+If possible, reconstruct your regex to have a leftmost capturing group
+that always matches.
+
+It might be useful to use non-capturing groups if you need to express a group
+before the text to discard.
+    Example: LINE_BREAKER = (?:one|two)([\r\n]+)
+    * This matches the text one, or two, followed by any amount of
+      newlines or carriage returns.  The one-or-two group is non-capturing
+      via the ?: prefix and is skipped by LINE_BREAKER.
+
+* A branched expression can match without the first capturing group
+  matching, so the line breaker behavior becomes more complex.
+  Rules:
+  1: If the first capturing group is part of a match, it is considered the
+     linebreak, as normal.
+  2: If the first capturing group is not part of a match, the leftmost
+     capturing group which is part of a match is considered the linebreak.
+  3: If no capturing group is part of the match, the linebreaker assumes
+     that the linebreak is a zero-length break immediately preceding the match.
+
+Example 1:  LINE_BREAKER = end(\n)begin|end2(\n)begin2|begin3
+
+  * A line ending with 'end' followed a line beginning with 'begin' would
+    match the first branch, and the first capturing group would have a match
+    according to rule 1.  That particular newline would become a break
+    between lines.
+  * A line ending with 'end2' followed by a line beginning with 'begin2'
+    would match the second branch and the second capturing group would have
+    a match.  That second capturing group would become the linebreak
+    according to rule 2, and the associated newline would become a break
+    between lines.
+  * The text 'begin3' anywhere in the file at all would match the third
+    branch, and there would be no capturing group with a match.  A linebreak
+    would be assumed immediately prior to the text 'begin3' so a linebreak
+    would be inserted prior to this text in accordance with rule 3.  This
+    means that a linebreak occurs before the text 'begin3' at any
+    point in the text, whether a linebreak character exists or not.
+
+Example 2: Example 1 would probably be better written as follows.  This is
+           not equivalent for all possible files, but for most real files
+           would be equivalent.
+
+           LINE_BREAKER = end2?(\n)begin(2|3)?
+
+LINE_BREAKER_LOOKBEHIND = <integer>
+* The number of bytes before the end of the raw data chunk
+  to which Splunk software should apply the 'LINE_BREAKER' regex.
+* When there is leftover data from a previous raw chunk,
+  LINE_BREAKER_LOOKBEHIND indicates the number of bytes before the end of
+  the raw chunk (with the next chunk concatenated) where Splunk software
+  applies the LINE_BREAKER regex.
+* You might want to increase this value from its default if you are
+  dealing with especially large or multi-line events.
+* Default: 100
+
+# Use the following settings to specify how multi-line events are handled.
+
+SHOULD_LINEMERGE = <boolean>
+* Whether or not to combine several lines of data into a single
+  multiline event, based on the configuration settings listed in
+  this subsection.
+* When you set this to "true", Splunk software combines several lines of data
+  into a single multi-line event, based on values you configure
+  in the following settings.
+* When you set this to "false", Splunk software does not combine lines of
+  data into multiline events.
+* Default: true
+
+# When SHOULD_LINEMERGE is set to true, use the following settings to
+# define how Splunk software builds multi-line events.
+
+BREAK_ONLY_BEFORE_DATE = <boolean>
+* Whether or not to create a new event if a new line with a date is encountered
+  in the data stream.
+* When you set this to "true", Splunk software creates a new event only if it
+  encounters a new line with a date.
+  * NOTE: When using DATETIME_CONFIG = CURRENT or NONE, this setting is not
+    meaningful, as timestamps are not identified.
+* Default: true
+
+BREAK_ONLY_BEFORE = <regular expression>
+* When set, Splunk software creates a new event only if it encounters a new
+  line that matches the regular expression.
+* Default: empty string
+
+MUST_BREAK_AFTER = <regular expression>
+* When set, Splunk software creates a new event for the next input line only
+  if the regular expression matches the current line.
+* It is possible for the software to break before the current line if
+  another rule matches.
+* Default: empty string
+
+MUST_NOT_BREAK_AFTER = <regular expression>
+* When set, and the current line matches the regular expression, Splunk software
+  does not break on any subsequent lines until the MUST_BREAK_AFTER expression
+  matches.
+* Default: empty string
+
+MUST_NOT_BREAK_BEFORE = <regular expression>
+* When set, and the current line matches the regular expression, Splunk
+  software does not break the last event before the current line.
+* Default: empty string
+
+MAX_EVENTS = <integer>
+* The maximum number of input lines to add to any event.
+* Splunk software breaks after it reads the specified number of lines.
+* Default: 256
+
+# Use the following settings to handle better load balancing from UF.
+# NOTE: The EVENT_BREAKER properties are applicable for Splunk Universal
+# Forwarder instances only.
+
+EVENT_BREAKER_ENABLE = <boolean>
+* Whether or not a universal forwarder (UF) uses the 'ChunkedLBProcessor'
+  data processor to improve distribution of events to receiving
+  indexers for a given source type.
+* When set to true, a UF splits incoming data with a
+  light-weight chunked line breaking processor ('ChunkedLBProcessor')
+  so that data is distributed fairly evenly amongst multiple indexers.
+* When set to false, a UF uses standard load-balancing methods to
+  send events to indexers.
+* Use this setting on a UF to indicate that data
+  should be split on event boundaries across indexers, especially
+  for large files.
+* This setting is only valid on universal forwarder instances.
+* Default: false
+
+# Use the following to define event boundaries for multi-line events
+# For single-line events, the default settings should suffice
+
+EVENT_BREAKER = <regular expression>
+* A regular expression that specifies the event boundary for a
+  universal forwarder to use to determine when it can send events
+  to an indexer.
+* The regular expression must contain a capturing group
+  (a pair of parentheses that defines an identified sub-component
+  of the match.)
+* When the UF finds a match, it considers the first capturing group
+  to be the end of the previous event, and the end of the capturing group
+  to be the beginning of the next event.
+* At this point, the forwarder can then change the receiving indexer
+  based on these event boundaries.
+* This setting is only active if you set 'EVENT_BREAKER_ENABLE' to
+  "true", only works on universal forwarders, and
+  works best with multiline events.
+* Default: "([\r\n]+)"
+
+LB_CHUNK_BREAKER = <regular expression>
+* A regular expression that specifies the event boundary for a
+  universal forwarder to use to determine when it can send events
+  to an indexer.
+* The regular expression must contain a capturing group
+  (a pair of parentheses that defines an identified sub-component
+  of the match.)
+* When the UF finds a match, it considers the first capturing group
+  to be the end of the previous event, and the end of the capturing group
+  to be the beginning of the next event.
+* Splunk software discards the contents of the first capturing group.
+  This content will not be present in any event, as Splunk software
+  considers this text to come between lines.
+* At this point, the forwarder can then change the receiving indexer
+  based on these event boundaries.
+* This is only used if [httpout] is configured in outputs.conf
+* Default: ([\r\n]+)
+
+LB_CHUNK_BREAKER_TRUNCATE = <non-negative integer>
+* The maximum length of data chunk sent by LB_CHUNK_BREAKER, in bytes.
+* Although this is in bytes, length is rounded down when this would
+  otherwise land mid-character for multi-byte characters.
+* Default: 2000000
