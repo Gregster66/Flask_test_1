@@ -1,9 +1,9 @@
 from flask import Flask,request
-import re
+from file_ingest import load_config
 
 app = Flask(__name__)
 
-
+props_dict = load_config("props.txt")
 
 @app.route('/')
 def hello_world():
@@ -12,10 +12,8 @@ def hello_world():
 @app.route('/test')
 def test():
     args = request.args.get('search')
-    with open('config.txt','r') as config:
-        data  =config.read()
 
-    return args
+    return props_dict[args]
 
 
 if __name__ == '__main__':
