@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="ec2-3-72-37-155.eu-central-1.compute.amazonaws.com" id="22265f51-f428-43f9-ba15-4a0d3bceed57" keyPath="G:\My Drive\AWS\greg2.pem" port="22" nameFormat="DESCRIPTIVE" username="ec2-user" />
+    </configs>
+  </component>
+</project>

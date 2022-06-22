@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="4b39a50a-a620-4ab2-83ad-4fdff8be951a" name="EC2_Flask_test_1_greg2" url="http://ec2-18-185-15-124.eu-central-1.compute.amazonaws.com">
+        <fileTransfer rootFolder="/home/ec2-user/Flask_2" accessType="SFTP" host="ec2-3-72-37-155.eu-central-1.compute.amazonaws.com" port="22" sshConfigId="22265f51-f428-43f9-ba15-4a0d3bceed57" sshConfig="ec2-user@ec2-3-72-37-155.eu-central-1.compute.amazonaws.com:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
