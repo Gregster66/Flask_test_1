@@ -15,11 +15,18 @@ def hello_world():
 @app.route('/fetch', methods=['POST'])
 def fetch():
     text,text_array,user = request_breakdown(request)
+    conf_file,stanza = text_array[0],text_array[1]
     print(user + ":" + text)
-
     logging.info( str(user) + ":" + str(text))
-    # res = '{"blocks": [{"type": "header","text": {"type": "plain_text","text":"' + str(text) + ' = ' + str(re.findall('^(.+?)\n',props_dict[text])[0]) + '","emoji": true}},{"type": "section","text": {"type": "mrkdwn","text": "' + props_dict[text] + '"}}]}'
-    return "*" + text_array[0] + "* = " + stanza_object[text_array[0]][text_array[1]]
+    # if conf_file not in stanza_object:
+    #     return f"⚠️*Error*  ⚠\nI don't have the settings for the {conf_file} conf file"
+    if stanza.lower() not in stanza_object[conf_file]:
+        if stanza.upper() not in stanza_object[conf_file]:
+            return f"⚠️*Error*  ⚠\nI can not find stanza *'{stanza}'* in the *{conf_file}* conf file"
+        else:
+            return "*" + stanza.upper() + "* = " + stanza_object[conf_file][stanza.upper()]
+    else:
+        return "*" + stanza.lower() + "* = " + stanza_object[conf_file][stanza.lower()]
 
 @app.route('/list', methods=['POST'])
 def list():
