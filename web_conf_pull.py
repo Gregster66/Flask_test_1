@@ -2,17 +2,24 @@
 import requests
 from bs4 import BeautifulSoup
 
-links = {'props': 'https://docs.splunk.com/Documentation/ITSI/latest/Configure/props.conf',
-         'transforms': 'https://docs.splunk.com/Documentation/ITSI/latest/Configure/transforms.conf'}
+links = {'props': 'https://docs.splunk.com/Documentation/Splunk/9.0.0/admin/Propsconf',
+         'transforms': 'https://docs.splunk.com/Documentation/Splunk/9.0.0/admin/Transformsconf',
+         'inputs': 'https://docs.splunk.com/Documentation/Splunk/9.0.0/admin/Inputsconf'}
 
-web_request = requests.get(links['props'])
-soup = BeautifulSoup(web_request.text,'html.parser')
+def web_pull(conf):
+    #check if the correct key conf file type was selected
+    if conf in links:
+        web_request = requests.get(links[conf])
+        soup = BeautifulSoup(web_request.text, 'html.parser')
+        sections = []
+        for section in soup.find_all('pre'):
+            sections.append(section.text)
+        file = conf + '.txt'
+        f = open(file, "w")
+        for sec in sections:
+            f.write(sec)
+        f.close()
 
-sections = []
-for section in soup.find_all('pre'):
-    sections.append(section.text)
+    else:
+        raise Exception("Incorrect conf file specified")
 
-f = open('props.txt', "w")
-for sec in sections:
-    f.write(sec)
-f.close()

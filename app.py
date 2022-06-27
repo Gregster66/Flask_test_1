@@ -32,6 +32,8 @@ def list():
         list = list + " \t " + key
     return list
 
+@app.route('/', methods=['POST'])
+
 if __name__ == '__main__':
     # app.run()
     from waitress import serve
