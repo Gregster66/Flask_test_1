@@ -14,4 +14,8 @@ def load_config(file):
 
     return stanza_dict
 
-def
+def request_breakdown(request):
+    text = request.form.get('text', None)
+    user = request.form.get('user_name', None)
+    text_array = text.split(" ")
+    return text_array, user

@@ -1,5 +1,5 @@
 from flask import Flask,request
-from file_ingest import load_config
+from file_ingest import load_config,request_breakdown
 import logging
 
 
@@ -16,7 +16,10 @@ def hello_world():
 def fetch():
     text = request.form.get('text', None)
     user = request.form.get('user_name', None)
+    t,u = request_breakdown(request)
     print(user + ":" + text)
+    print(t)
+    print(u)
     logging.info( str(user) + ":" + str(text))
     # res = '{"blocks": [{"type": "header","text": {"type": "plain_text","text":"' + str(text) + ' = ' + str(re.findall('^(.+?)\n',props_dict[text])[0]) + '","emoji": true}},{"type": "section","text": {"type": "mrkdwn","text": "' + props_dict[text] + '"}}]}'
     return "*" + text + "* = " + props_dict[text]
