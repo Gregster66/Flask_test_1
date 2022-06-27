@@ -5,7 +5,6 @@ import logging
 
 app = Flask(__name__)
 
-props_dict = load_config("props.txt")
 logging.basicConfig(format='%(asctime)s %(message)s',filename='flask_log.log', level=logging.DEBUG)
 
 @app.route('/')
@@ -14,12 +13,9 @@ def hello_world():
 
 @app.route('/fetch', methods=['POST'])
 def fetch():
-    text = request.form.get('text', None)
-    user = request.form.get('user_name', None)
-    t,u = request_breakdown(request)
+    text,text_array,user = request_breakdown(request)
     print(user + ":" + text)
-    print(t)
-    print(u)
+
     logging.info( str(user) + ":" + str(text))
     # res = '{"blocks": [{"type": "header","text": {"type": "plain_text","text":"' + str(text) + ' = ' + str(re.findall('^(.+?)\n',props_dict[text])[0]) + '","emoji": true}},{"type": "section","text": {"type": "mrkdwn","text": "' + props_dict[text] + '"}}]}'
     return "*" + text + "* = " + props_dict[text]
@@ -35,7 +31,7 @@ def list():
         list = list + " \t " + key
     return list
 
-@app.route('/', methods=['POST'])
+#@app.route('/', methods=['POST'])
 
 if __name__ == '__main__':
     # app.run()

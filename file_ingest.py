@@ -1,21 +1,30 @@
-def load_config(file):
+from web_conf_pull import links
+
+def load_config():
     import re
-    #open file
-    with open(file,'r') as config:
-        data = config.read()
+    stanza_object = {}
+    for key in links:
 
-    #regex out 2 capture groups, the name of the stanza and the remaining multiple lines of it's description
-    stanza = re.findall('^([A-Za-z_]+)\s=\s(.+?)(?=^[A-Za-z_]+\s=|\Z)',data,re.DOTALL | re.MULTILINE)
+        #open file
+        conf_file = key + '.txt'
+        with open(conf_file,'r') as config:
+            data = config.read()
 
-    stanza_dict = {}
-    #populate dictionary with each pair of regex groups, the stanza name being the key. The previous objects was a tuple. I am moving the data to a dictionary because it allows me to search based on KEY.
-    for row in stanza:
-        stanza_dict[row[0]] = row[1]
+        #regex out 2 capture groups, the name of the stanza and the remaining multiple lines of it's description
+        stanza = re.findall('^([A-Za-z_]+)\s=\s(.+?)(?=^[A-Za-z_]+\s=|\Z)',data,re.DOTALL | re.MULTILINE)
 
-    return stanza_dict
+        #populate dictionary with each pair of regex groups, the stanza name being the key. The previous objects was a tuple. I am moving the data to a dictionary because it allows me to search based on KEY.
+        conf_stanza = {}
+        for row in stanza:
+            conf_stanza[row[0]] = row[1]
+        stanza_object[key] = conf_stanza
+
+    return stanza_object
 
 def request_breakdown(request):
     text = request.form.get('text', None)
     user = request.form.get('user_name', None)
     text_array = text.split(" ")
-    return text_array, user
+    return text, text_array, user
+
+load_config()
