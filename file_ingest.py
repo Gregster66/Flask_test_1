@@ -27,4 +27,3 @@ def request_breakdown(request):
     text_array = text.split(" ")
     return text, text_array, user
 
-load_config()

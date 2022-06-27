@@ -5,6 +5,7 @@ import logging
 
 app = Flask(__name__)
 
+stanza_object = load_config()
 logging.basicConfig(format='%(asctime)s %(message)s',filename='flask_log.log', level=logging.DEBUG)
 
 @app.route('/')
@@ -18,12 +19,11 @@ def fetch():
 
     logging.info( str(user) + ":" + str(text))
     # res = '{"blocks": [{"type": "header","text": {"type": "plain_text","text":"' + str(text) + ' = ' + str(re.findall('^(.+?)\n',props_dict[text])[0]) + '","emoji": true}},{"type": "section","text": {"type": "mrkdwn","text": "' + props_dict[text] + '"}}]}'
-    return "*" + text + "* = " + props_dict[text]
+    return "*" + text_array[0] + "* = " + stanza_object[text_array[0]][text_array[1]]
 
 @app.route('/list', methods=['POST'])
 def list():
-    text = request.form.get('text', None)
-    user = request.form.get('user_name', None)
+    text,text_array,user = request_breakdown(request)
     print(user + ":" + text)
     keys_list = props_dict.keys()
     list = ""
